@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Text, View, ScrollView, FlatList } from 'react-native';
+import { Text, View, ScrollView, FlatList, Modal, Button, StyleSheet } from 'react-native';
 import { Card, Icon } from 'react-native-elements';
 import { connect } from 'react-redux';
 import { baseUrl } from '../shared/baseUrl';
@@ -48,31 +48,43 @@ function RenderComments({ comments }) {
 
 function RenderCampsite(props) {
 
-    const {campsite} = props ;
+    const { campsite } = props;
 
     if (campsite) {
         return (
             <Card
                 featuredTitle={campsite.name}
-                image={{uri: baseUrl + campsite.image}}>
+                image={{ uri: baseUrl + campsite.image }}>
                 <Text style={{ margin: 10 }}>
                     {campsite.description}
                 </Text>
-                <Icon
+                <View style={styles.cardRow}>
+                    <Icon
+                        name={props.favorite ? 'heart' : 'heart-o'}
+                        type='font-awesome'
+                        color='#f50'
+                        raised
+                        reverse
+                        onPress={() => props.favorite ?
+                            console.log('Already set as a favorite') : props.markFavorite()}
 
-                    name={props.favorite ? 'heart' : 'heart-o'}
-                    type='font-awesome'
-                    color='#f50'
-                    raised
-                    reverse
-                    onPress={() => props.favorite ? 
-                        console.log('Already set as a favorite') : props.markFavorite()}
+                    />
 
-                   
-                />
+                    <Icon style={styles.cardItem}
+                        name='pencil'
+                        type='font-awesome'
+                        color='#5637DD'
+                        raised
+                        reverse
+                        onPress={() => props.onShowModal()}
 
+                    />
+
+
+                </View>
 
             </Card>
+
         );
     }
     return <View />;
@@ -80,8 +92,24 @@ function RenderCampsite(props) {
 
 class CampsiteInfo extends Component {
 
-    markFavorite(campsiteId){
-       this.props.postFavorite(campsiteId)
+    constructor(props) {
+        super(props);
+        this.state = {
+            showModal: false
+
+        };
+
+    }
+
+
+
+    toggleModal() {
+        this.setState({ showModal: !this.state.showModal });
+    }
+
+
+    markFavorite(campsiteId) {
+        this.props.postFavorite(campsiteId)
     }
 
     static navigationOptions = {
@@ -95,12 +123,32 @@ class CampsiteInfo extends Component {
         return (
             <ScrollView>
                 <RenderCampsite campsite={campsite}
-                   favorite={this.props.favorites.includes(campsiteId)}
-                   markFavorite={() => this.markFavorite(campsiteId)}
-                    
-                
+                    favorite={this.props.favorites.includes(campsiteId)}
+                    markFavorite={() => this.markFavorite(campsiteId)}
+
+
                 />
                 <RenderComments comments={comments} />
+                <Modal
+                    animationType={'slide'}
+                    transparent={false}
+                    visible={this.state.showModal}
+                    onRequestClose={() => this.toggleModal()}>
+                    onShowModal={() => this.toggleModal()}
+                    <View style={styles.modal}>
+                        <View style={{ margin: 10 }} >
+                            <Button
+                                onPress={() => {
+                                    this.toggleModal();
+
+                                }}
+                                color='#808080'
+                                title='Cancel'
+                            />
+                        </View>
+                    </View>
+
+                </Modal>
             </ScrollView>
 
         );
@@ -109,4 +157,25 @@ class CampsiteInfo extends Component {
     }
 }
 
-export default connect(mapStateToProps,mapDispatchToProps)(CampsiteInfo);
+
+const styles = StyleSheet.create({
+    cardRow: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        flexDirection: 'row',
+        margin: 20
+    },
+    cardItem: {
+        flex: 1,
+        margin: 10
+    },
+    modal: {
+        justifyContent: 'center',
+        flex: 1,
+        margin: 10
+    }
+
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(CampsiteInfo);
